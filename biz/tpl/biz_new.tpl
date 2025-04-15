@@ -17,7 +17,7 @@ import (
 func New{{ .UpperName }}UseCase(
 	logger log.Logger,
 ) *{{ .UpperName }}UseCase {
-	l := log.NewHelper(log.With(logger, "module", "biz/{{ .LowerName }}"), log.WithMessageKey("message"))
+	l := log.NewHelper(log.With(logger, "module", "biz/{{ .LowerName }}"))
 	return &{{ .UpperName }}UseCase{
 		log:         l,
 	}

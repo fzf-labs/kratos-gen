@@ -6,8 +6,15 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"unicode"
 
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"golang.org/x/tools/imports"
+)
+
+const (
+	GoExt = ".go"
 )
 
 // ReadDirFilesWithSuffix 遍历指定目录下的指定后缀文件
@@ -100,4 +107,53 @@ func Output(fileName string, content []byte) error {
 		return err
 	}
 	return err
+}
+
+// GetUpperName 获取大驼峰名称
+func GetUpperName(name string) string {
+	s := strings.Split(name, ".")[0]
+	s = strings.ReplaceAll(s, "_", " ")
+	s = cases.Title(language.Und, cases.NoLower).String(s)
+	return strings.ReplaceAll(s, " ", "")
+}
+
+// GetLowerName 获取小驼峰名称
+func GetLowerName(name string) string {
+	s := strings.Split(name, ".")[0]
+	s = strings.ReplaceAll(s, "_", " ")
+	s = LcFirst(cases.Title(language.Und, cases.NoLower).String(s))
+	return strings.ReplaceAll(s, " ", "")
+}
+
+// LcFirst 首字母小写
+func LcFirst(s string) string {
+	if s == "" {
+		return s
+	}
+	rs := []rune(s)
+	f := rs[0]
+	if 'A' <= f && f <= 'Z' {
+		return string(unicode.ToLower(f)) + string(rs[1:])
+	}
+	return s
+}
+
+// GetDirUpperName 获取目录大写名
+func GetDirUpperName(dir string) string {
+	str := ""
+	splitList := strings.Split(filepath.ToSlash(dir), "/")
+	for _, v := range splitList {
+		str += GetUpperName(v)
+	}
+	return str
+}
+
+// GetDirSnakeName 获取目录小写名
+func GetDirSnakeName(dir string) string {
+	list := make([]string, 0)
+	splitList := strings.Split(filepath.ToSlash(dir), "/")
+	for _, v := range splitList {
+		list = append(list, strings.ToLower(GetUpperName(v)))
+	}
+	return strings.Join(list, "_")
 }

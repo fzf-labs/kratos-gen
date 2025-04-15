@@ -1,6 +1,6 @@
 module github.com/fzf-labs/kratos-gen
 
-go 1.19
+go 1.22.0
 
 require (
 	github.com/dave/dst v0.27.3

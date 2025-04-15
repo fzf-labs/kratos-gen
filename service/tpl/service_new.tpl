@@ -19,7 +19,7 @@ func New{{ .UpperName }}Service(
 	logger log.Logger,
 	{{ .LowerName }}UseCase *biz.{{ .UpperName }}UseCase,
 ) *{{ .UpperName }}Service {
-	l := log.NewHelper(log.With(logger, "module", "service/{{ .LowerName }}"), log.WithMessageKey("message"))
+	l := log.NewHelper(log.With(logger, "module", "service/{{ .LowerName }}"))
 	return &{{ .UpperName }}Service{
 		log:         l,
 		{{ .LowerName }}UseCase:{{ .LowerName }}UseCase,

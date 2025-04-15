@@ -11,7 +11,7 @@ func New{{ .upperName }}Repo(
 	logger log.Logger,
 	data *Data,
 ) biz.{{ .upperName }}Repo {
-	l := log.NewHelper(log.With(logger, "module", "data/{{ .lowerName }}"), log.WithMessageKey("message"))
+	l := log.NewHelper(log.With(logger, "module", "data/{{ .lowerName }}"))
 	return &{{ .upperName }}Repo{
 		log:         l,
 		data:     data,

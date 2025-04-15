@@ -3,8 +3,9 @@ package main
 import (
 	"log"
 
+	"github.com/fzf-labs/kratos-gen/biz"
 	"github.com/fzf-labs/kratos-gen/data"
-	"github.com/fzf-labs/kratos-gen/logic"
+	"github.com/fzf-labs/kratos-gen/service"
 	"github.com/spf13/cobra"
 )
 
@@ -12,12 +13,13 @@ var rootCmd = &cobra.Command{
 	Use:     "kratos-gen",
 	Short:   "kratos-gen: gen service biz data code",
 	Long:    `kratos-gen: gen service biz data code`,
-	Version: release,
+	Version: "v2.8.2",
 }
 
 func init() {
-	rootCmd.AddCommand(logic.CmdLogic)
 	rootCmd.AddCommand(data.CmdData)
+	rootCmd.AddCommand(biz.CmdBiz)
+	rootCmd.AddCommand(service.CmdService)
 }
 
 func main() {

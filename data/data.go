@@ -10,12 +10,11 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/fzf-labs/kratos-gen/utils"
-	"gorm.io/gorm"
-
 	"github.com/dave/dst"
 	"github.com/dave/dst/decorator"
 	"github.com/fzf-labs/kratos-gen/data/tpl"
+	"github.com/fzf-labs/kratos-gen/utils"
+	"gorm.io/gorm"
 )
 
 type Data struct {
