@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 
-	"github.com/fzf-labs/kratos-gen/biz"
 	"github.com/fzf-labs/kratos-gen/data"
 	"github.com/fzf-labs/kratos-gen/service"
 	"github.com/spf13/cobra"
@@ -18,7 +17,6 @@ var rootCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(data.CmdData)
-	rootCmd.AddCommand(biz.CmdBiz)
 	rootCmd.AddCommand(service.CmdService)
 }
 

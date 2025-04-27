@@ -1,18 +1,13 @@
 # Kratos-Gen
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/fzf-labs/kratos-gen)](https://goreportcard.com/report/github.com/fzf-labs/kratos-gen)
-[![GoDoc](https://godoc.org/github.com/fzf-labs/kratos-gen?status.svg)](https://godoc.org/github.com/fzf-labs/kratos-gen)
-[![Release](https://img.shields.io/github/v/release/fzf-labs/kratos-gen.svg?style=flat-square)](https://github.com/fzf-labs/kratos-gen/releases)
-[![License](https://img.shields.io/github/license/fzf-labs/kratos-gen)](https://github.com/fzf-labs/kratos-gen/blob/master/LICENSE)
-
 ## 项目介绍
 
-Kratos-Gen 是一个用于 [Kratos](https://github.com/go-kratos/kratos) 微服务框架的代码生成工具，可以根据 protobuf 文件或数据库表结构自动生成 service、biz、data 层的代码，大大提高开发效率。
+Kratos-Gen 是一个用于 [Kratos](https://github.com/go-kratos/kratos) 微服务框架的代码生成工具，可以根据 protobuf 文件或数据库表结构自动生成 service 和 data 层的代码，大大提高开发效率。
 
 ## 特性
 
-- 根据 protobuf 文件生成 service 层和 biz 层代码
-- 根据数据库表结构生成 data 层和 biz 层接口代码
+- 根据 protobuf 文件生成 service 层代码
+- 根据数据库表结构生成 data 层代码和 biz 层接口
 - 支持 MySQL 和 PostgreSQL 数据库
 - 自动处理依赖注入和 wire 配置
 - 支持自定义输出路径
@@ -33,12 +28,12 @@ go build -o kratos-gen .
 
 ## 使用方法
 
-### 生成 service 和 biz 层代码
+### 生成 service 层代码
 
-根据 protobuf 文件生成 service 和 biz 层代码：
+根据 protobuf 文件生成 service 层代码：
 
 ```bash
-kratos-gen logic [flags]
+kratos-gen service [flags]
 ```
 
 参数说明：
@@ -47,8 +42,7 @@ kratos-gen logic [flags]
 Flags:
   -h, --help                       帮助信息
   -i, --inPutPbPath string         protobuf 文件输入路径 (默认 "./api")
-  -b, --outPutBizPath string       biz 层代码输出路径 (默认 "./internal/biz")
-  -s, --outPutServicePath string   service 层代码输出路径 (默认 "./internal/service")
+  -o, --outPutServicePath string   service 层代码输出路径 (默认 "./internal/service")
 ```
 
 ### 生成 data 层代码
@@ -66,21 +60,21 @@ Flags:
       --db string               数据库类型 (mysql 或 postgres)
       --dsn string              数据库连接字符串
   -h, --help                    帮助信息
-      --outPutBizPath string    biz 层代码输出路径 (默认 "./internal/biz")
+      --outPutBizPath string    biz 层接口代码输出路径 (默认 "./internal/biz")
       --outPutDataPath string   data 层代码输出路径 (默认 "./internal/data")
       --tables string           指定要生成的表名，多个表用逗号分隔，不指定则生成所有表
 ```
 
 ## 示例
 
-### 生成 service 和 biz 层代码
+### 生成 service 层代码
 
 ```bash
 # 使用默认路径
-kratos-gen logic
+kratos-gen service
 
 # 自定义路径
-kratos-gen logic -i ./proto -b ./internal/biz -s ./internal/service
+kratos-gen service -i ./proto -o ./internal/service
 ```
 
 ### 生成 data 层代码
@@ -103,16 +97,15 @@ kratos-gen data --db mysql --dsn "user:password@tcp(127.0.0.1:3306)/database_nam
 │   ├── cmd.go  # data 命令定义
 │   ├── data.go # data 代码生成逻辑
 │   └── tpl     # data 层模板
-├── logic       # 业务逻辑层代码生成相关
-│   ├── cmd.go  # logic 命令定义
-│   ├── logic.go # logic 代码生成逻辑
-│   ├── proto   # protobuf 解析
-│   └── tpl     # service 和 biz 层模板
+├── service     # 服务层代码生成相关
+│   ├── cmd.go  # service 命令定义
+│   ├── service.go # service 代码生成逻辑
+│   └── tpl     # service 层模板
+├── proto       # protobuf 解析
 ├── utils       # 工具函数
 ├── go.mod      # Go 模块定义
 ├── go.sum      # Go 依赖版本
-├── main.go     # 主程序入口
-└── version.go  # 版本信息
+└── main.go     # 主程序入口
 ```
 
 ## 依赖

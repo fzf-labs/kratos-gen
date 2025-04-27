@@ -7,8 +7,8 @@ import (
 // CmdLogic the service command.
 var CmdService = &cobra.Command{
 	Use:   "service",
-	Short: "generate the kratos service biz code from proto",
-	Long:  "generate the kratos service biz code from proto",
+	Short: "generate the kratos service code from proto",
+	Long:  "generate the kratos service code from proto",
 	Run:   run,
 }
 
@@ -20,7 +20,7 @@ var (
 //nolint:gochecknoinits
 func init() {
 	CmdService.Flags().StringVarP(&inPutPbPath, "inPutPbPath", "i", "./api", "inPutPbPath")
-	CmdService.Flags().StringVarP(&outPutServicePath, "outPutServicePath", "s", "./internal/service", "outPutServicePath")
+	CmdService.Flags().StringVarP(&outPutServicePath, "outPutServicePath", "o", "./internal/service", "outPutServicePath")
 }
 
 // run the service command.

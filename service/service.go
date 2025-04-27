@@ -93,7 +93,10 @@ func (l *Service) Service(pbFiles []string) { //nolint:funlen,gocyclo
 				firstChar := strings.ToLower(serviceName[0:1])
 				wires = append(wires, fmt.Sprintf("New%sService", upperServiceName))
 				toService := filepath.Join(l.outPutServicePath, strings.ToLower(dirSnakeName+"_"+s.UpperName)+utils.GoExt)
-				if _, err3 := os.Stat(toService); os.IsNotExist(err3) {
+
+				if _, err3 := os.Stat(toService); !os.IsNotExist(err3) {
+					log.Printf("service already exists: %s\n", toService)
+				} else {
 					// 创建
 					service, err := utils.TemplateExecute(tpl.ServiceNew, &ServiceNewTplParam{
 						GoPackage:        s.GoPackage,
@@ -109,104 +112,43 @@ func (l *Service) Service(pbFiles []string) { //nolint:funlen,gocyclo
 						log.Printf("pb.TemplateExecute err %v", err)
 						return
 					}
-					for _, v := range s.Methods {
-						method, err2 := utils.TemplateExecute(tpl.ServiceMethod, &ServiceMethodTplParam{
-							GoPackage:        s.GoPackage,
-							UpperName:        upperServiceName,
-							LowerName:        lowerServiceName,
-							UpperServiceName: s.UpperName,
-							FirstChar:        firstChar,
-							GoogleEmpty:      s.GoogleEmpty,
-							UseIO:            s.UseIO,
-							UseContext:       s.UseContext,
-							Name:             v.Name,
-							Request:          v.Request,
-							Reply:            v.Reply,
-							Type:             v.Type,
-							Comment:          v.Comment,
-						})
-						if err2 != nil {
-							return
-						}
-						// 换行
-						service = append(service, []byte("\n")...)
-						service = append(service, method...)
-					}
 					err = utils.Output(toService, service)
 					if err != nil {
 						log.Printf("pb.Output err %v", err)
 						return
 					}
 					log.Printf("service generated successfully: %s\n", toService)
-				} else {
-					// 更新
-					if len(s.Methods) == 0 {
-						return
+				}
+				for _, v := range s.Methods {
+					toMethod := filepath.Join(l.outPutServicePath, strings.ToLower(dirSnakeName+"_"+s.UpperName+"_"+v.Name)+utils.GoExt)
+					if _, err3 := os.Stat(toMethod); !os.IsNotExist(err3) {
+						log.Printf("service method already exists: %s\n", toMethod)
+						continue
 					}
-					methodToProto := make(map[string]*proto.Method)
-					for _, v := range s.Methods {
-						methodToProto[v.Name] = v
-					}
-					fileSet := token.NewFileSet()
-					// 这里取绝对路径，方便打印出来的语法树可以转跳到编辑器
-					path, _ := filepath.Abs(toService)
-					f, err := decorator.ParseFile(fileSet, path, nil, parser.ParseComments)
-					if err != nil {
-						return
-					}
-					dst.Inspect(f, func(node dst.Node) bool {
-						fn, ok := node.(*dst.FuncDecl)
-						if ok {
-							delete(methodToProto, fn.Name.Name)
-						}
-						return true
+					method, err2 := utils.TemplateExecute(tpl.ServiceMethod, &ServiceMethodTplParam{
+						GoPackage:        s.GoPackage,
+						UpperName:        upperServiceName,
+						LowerName:        lowerServiceName,
+						UpperServiceName: s.UpperName,
+						FirstChar:        firstChar,
+						GoogleEmpty:      s.GoogleEmpty,
+						UseIO:            s.UseIO,
+						UseContext:       s.UseContext,
+						Name:             v.Name,
+						Request:          v.Request,
+						Reply:            v.Reply,
+						Type:             v.Type,
+						Comment:          v.Comment,
 					})
-					if len(methodToProto) == 0 {
+					if err2 != nil {
+						log.Fatal(err2)
 						return
 					}
-					for _, v := range s.Methods {
-						if _, ok := methodToProto[v.Name]; !ok {
-							continue
-						}
-						method, err2 := utils.TemplateExecute(tpl.ServiceNew+tpl.ServiceMethod, &ServiceMethodTplParam{
-							GoPackage:        s.GoPackage,
-							UpperName:        upperServiceName,
-							LowerName:        lowerServiceName,
-							UpperServiceName: s.UpperName,
-							FirstChar:        firstChar,
-							GoogleEmpty:      s.GoogleEmpty,
-							UseIO:            s.UseIO,
-							UseContext:       s.UseContext,
-							Name:             v.Name,
-							Request:          v.Request,
-							Reply:            v.Reply,
-							Type:             v.Type,
-							Comment:          v.Comment,
-						})
-						if err2 != nil {
-							return
-						}
-						decls, err2 := getAstFuncDecl(method)
-						if err2 != nil {
-							log.Printf("getAstFuncDecl err2 %v", err2)
-							return
-						}
-						for _, funcDecl := range decls {
-							f.Decls = append(f.Decls, funcDecl)
-						}
-					}
-					// 创建一个缓冲区来存储格式化后的代码
-					buf := &bytes.Buffer{}
-					err = decorator.Fprint(buf, f)
-					if err != nil {
+					if err3 := utils.Output(toMethod, method); err3 != nil {
+						log.Fatal(err3)
 						return
 					}
-					err = utils.Output(toService, buf.Bytes())
-					if err != nil {
-						log.Printf("pb.Output err4 %v", err)
-						return
-					}
-					log.Printf("service updated successfully: %s\n", toService)
+					log.Printf("service method generated successfully: %s\n", toMethod)
 				}
 			}
 		}(file)
@@ -280,21 +222,4 @@ func (l *Service) Service(pbFiles []string) { //nolint:funlen,gocyclo
 		}
 	}
 	log.Printf("service wire generated successfully: %s\n", toServiceWire)
-}
-
-// getAstFuncDecl 获取函数
-func getAstFuncDecl(code []byte) ([]*dst.FuncDecl, error) {
-	var methods []*dst.FuncDecl
-	f, err := decorator.Parse(code)
-	if err != nil {
-		return nil, err
-	}
-	dst.Inspect(f, func(node dst.Node) bool {
-		fn, ok := node.(*dst.FuncDecl)
-		if ok && !strings.Contains(fn.Name.String(), "New") {
-			methods = append(methods, fn)
-		}
-		return true
-	})
-	return methods, nil
 }
