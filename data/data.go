@@ -18,20 +18,20 @@ import (
 )
 
 type Data struct {
-	db             string
-	dsn            string // 数据库连接
-	targetTables   string // 指定表
-	outPutDataPath string // 输出路径
-	outPutBizPath  string // 输出路径
+	db                string
+	dsn               string // 数据库连接
+	targetTables      string // 指定表
+	outPutDataPath    string // data输出路径
+	outPutServicePath string // service输出路径
 }
 
-func NewData(db, dsn, targetTables, outPutDataPath, outPutBizPath string) *Data {
+func NewData(db, dsn, targetTables, outPutDataPath, outPutServicePath string) *Data {
 	return &Data{
-		db:             db,
-		dsn:            dsn,
-		targetTables:   targetTables,
-		outPutDataPath: outPutDataPath,
-		outPutBizPath:  outPutBizPath,
+		db:                db,
+		dsn:               dsn,
+		targetTables:      targetTables,
+		outPutDataPath:    outPutDataPath,
+		outPutServicePath: outPutServicePath,
 	}
 }
 
@@ -72,12 +72,12 @@ func (d *Data) Run() {
 		}
 	}
 	if len(interfaces) > 0 {
-		toBiz := filepath.Join(d.outPutBizPath, "biz.go")
-		if _, err := os.Stat(toBiz); !os.IsNotExist(err) {
+		toService := filepath.Join(d.outPutServicePath, "service.go")
+		if _, err := os.Stat(toService); !os.IsNotExist(err) {
 			// 语法树解析
 			fileSet := token.NewFileSet()
 			// 这里取绝对路径，方便打印出来的语法树可以转跳到编辑器
-			path, _ := filepath.Abs(toBiz)
+			path, _ := filepath.Abs(toService)
 			f, err2 := decorator.ParseFile(fileSet, path, nil, parser.ParseComments)
 			if err2 != nil {
 				return
@@ -153,7 +153,7 @@ func (d *Data) Run() {
 				if err != nil {
 					return
 				}
-				err = utils.Output(toBiz, buf.Bytes())
+				err = utils.Output(toService, buf.Bytes())
 				if err != nil {
 					log.Printf("pb.Output err %v", err)
 					return
@@ -179,7 +179,7 @@ func lowerName(db *gorm.DB, s string) string {
 		"EOF", "GUID", "HTML", "HTTP", "HTTPS",
 		"ID", "IP", "JSON", "LHS", "QPS",
 		"RAM", "RHS", "RPC", "SLA", "SMTP",
-		"SSH", "TLS", "ttl", "UID", "UI",
+		"SSH", "TLS", "TTL", "UID", "UI",
 		"UUID", "URI", "URL", "UTF8", "VM",
 		"XML", "XSRF", "XSS",
 	}
