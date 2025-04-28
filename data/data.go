@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"unicode"
 
@@ -40,11 +41,17 @@ func (d *Data) Run() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	tables := make([]string, 0)
+	tables, err := orm.Migrator().GetTables()
+	if err != nil {
+		log.Printf("get tables err: %v", err)
+	}
 	if d.targetTables != "" {
-		tables = strings.Split(d.targetTables, ",")
-	} else {
-		tables, _ = orm.Migrator().GetTables()
+		targetTables := strings.Split(d.targetTables, ",")
+		for _, table := range targetTables {
+			if !slices.Contains(tables, table) {
+				log.Printf("table %s not found", table)
+			}
+		}
 	}
 	if _, err := os.Stat(d.outPutDataPath); os.IsNotExist(err) {
 		log.Printf("Target directory: %s does not exsit\n", d.outPutDataPath)
@@ -88,9 +95,7 @@ func (d *Data) Run() {
 					if fn.Tok == token.TYPE {
 						for _, spec := range fn.Specs {
 							typeSpec := spec.(*dst.TypeSpec)
-							if _, ok2 := interfaces[typeSpec.Name.Name]; ok2 {
-								delete(interfaces, typeSpec.Name.Name)
-							}
+							delete(interfaces, typeSpec.Name.Name)
 						}
 					}
 				}
