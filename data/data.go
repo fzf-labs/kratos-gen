@@ -1,6 +1,10 @@
 package data
 
 import (
+	"bytes"
+	"fmt"
+	"go/parser"
+	"go/token"
 	"log"
 	"os"
 	"path/filepath"
@@ -8,10 +12,11 @@ import (
 	"strings"
 	"unicode"
 
-	"gorm.io/gorm"
-
+	"github.com/dave/dst"
+	"github.com/dave/dst/decorator"
 	"github.com/fzf-labs/kratos-gen/data/tpl"
 	"github.com/fzf-labs/kratos-gen/utils"
+	"gorm.io/gorm"
 )
 
 type Data struct {
@@ -52,17 +57,19 @@ func (d *Data) Run() {
 		log.Printf("Target directory: %s does not exsit\n", d.outPutDataPath)
 		return
 	}
+	dataWires := make([]string, 0)
 	for _, table := range tables {
 		tmp := map[string]string{
 			"dbName":    dbName,
 			"upperName": upperName(orm, table),
 			"lowerName": lowerName(orm, table),
 		}
+		dataWires = append(dataWires, fmt.Sprintf("New%sRepo", tmp["upperName"]), fmt.Sprintf("%s_repo.New%sRepo", tmp["dbName"], tmp["upperName"]))
 		toData := filepath.Join(d.outPutDataPath, strings.ToLower(tmp["upperName"])+".go")
 		if _, err := os.Stat(toData); !os.IsNotExist(err) {
 			log.Printf("data new already exists: %s\n", toData)
 		} else {
-			b, err2 := utils.TemplateExecute(tpl.DataNew, tmp)
+			b, err2 := utils.TemplateExecute(tpl.DataRepoNew, tmp)
 			if err2 != nil {
 				return
 			}
@@ -70,6 +77,80 @@ func (d *Data) Run() {
 				log.Fatal(err3)
 			}
 			log.Printf("data new generated successfully: %s\n", toData)
+		}
+	}
+	toDataWire := filepath.Join(d.outPutDataPath, "data.go")
+	if _, err := os.Stat(toDataWire); os.IsNotExist(err) {
+		execute, err := utils.TemplateExecute(tpl.DataNew, map[string]string{})
+		if err != nil {
+			log.Printf("pb.TemplateExecute err %v", err)
+			return
+		}
+		err = utils.Output(toDataWire, execute)
+		if err != nil {
+			log.Printf("pb.Output err %v", err)
+			return
+		}
+	}
+	if len(dataWires) > 0 {
+		// 语法树解析
+		fileSet := token.NewFileSet()
+		// 这里取绝对路径，方便打印出来的语法树可以转跳到编辑器
+		path, _ := filepath.Abs(toDataWire)
+		f, err := decorator.ParseFile(fileSet, path, nil, parser.ParseComments)
+		if err != nil {
+			return
+		}
+		dst.Inspect(f, func(node dst.Node) bool {
+			fn, ok := node.(*dst.CallExpr)
+			if ok && fn != nil {
+				// 判断Fun 是 *dst.SelectorExpr
+				selector, ok := fn.Fun.(*dst.SelectorExpr)
+				if ok && selector != nil {
+					// 判断是否已经存在
+					if selector.Sel != nil && selector.Sel.Name == "NewSet" {
+						wires := make([]string, 0)
+						for _, arg := range fn.Args {
+							if ident, ok2 := arg.(*dst.Ident); ok2 {
+								wires = append(wires, ident.Name)
+							}
+						}
+						for _, wire := range dataWires {
+							if !slices.Contains(wires, wire) {
+								wires = append(wires, wire)
+							}
+						}
+						args := make([]dst.Expr, 0)
+						for _, wire := range wires {
+							args = append(args, &dst.Ident{
+								Name: wire,
+								Obj:  nil,
+								Path: "",
+								Decs: dst.IdentDecorations{
+									NodeDecs: dst.NodeDecs{
+										Before: 1,
+										After:  1,
+									},
+								},
+							})
+						}
+						fn.Args = args
+						return true
+					}
+				}
+			}
+			return true
+		})
+		// 创建一个缓冲区来存储格式化后的代码
+		buf := &bytes.Buffer{}
+		err = decorator.Fprint(buf, f)
+		if err != nil {
+			return
+		}
+		err = utils.Output(toDataWire, buf.Bytes())
+		if err != nil {
+			log.Printf("pb.Output err4 %v", err)
+			return
 		}
 	}
 }

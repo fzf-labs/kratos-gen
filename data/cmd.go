@@ -18,7 +18,6 @@ var (
 	dsn            string // 数据库连接
 	targetTables   string // 指定表
 	outPutDataPath string // data输出路径
-
 )
 
 func init() {

@@ -2,24 +2,21 @@
 package data
 
 import (
-	"context"
+	"github.com/go-kratos/kratos/v2/log"
+	"github.com/google/wire"
 )
 
-func New{{ .upperName }}Repo(
-	logger log.Logger,
-	data *Data,
-	{{ .lowerName }}Repo *{{ .dbName }}_repo.{{ .upperName }}Repo,
-) *{{ .upperName }}Repo {
-	l := log.NewHelper(log.With(logger, "module", "data/{{ .lowerName }}"))
-	return &{{ .upperName }}Repo{
-		log:         		l,
-		data:     			data,
-		{{ .upperName }}Repo:{{ .lowerName }}Repo,
-	}
+// ProviderSet is data providers.
+var ProviderSet = wire.NewSet()
+
+// Data .
+type Data struct {
 }
 
-type {{ .upperName }}Repo struct {
-	log *log.Helper
-	data *Data
-	*{{ .dbName }}_repo.{{ .upperName }}Repo
+// NewData .
+func NewData(c *conf.Bootstrap, logger log.Logger) (*Data, func(), error) {
+	cleanup := func() {
+		log.NewHelper(logger).Info("closing the data resources")
+	}
+	return &Data{}, cleanup, nil
 }
