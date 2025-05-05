@@ -11,6 +11,9 @@ var ServiceMethodCreate string
 //go:embed service_method_update.tpl
 var ServiceMethodUpdate string
 
+//go:embed service_method_update_status.tpl
+var ServiceMethodUpdateStatus string
+
 //go:embed service_method_delete.tpl
 var ServiceMethodDelete string
 

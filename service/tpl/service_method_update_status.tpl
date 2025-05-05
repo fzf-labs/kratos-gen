@@ -27,7 +27,7 @@ func ({{.FirstChar}} *{{ .UpperServiceName }}Service) {{ .Name }}(ctx context.Co
 		return nil, pb.ErrorReasonDataRecordNotFound()
 	}
 	oldData := {{.FirstChar}}.{{ .LowerName }}Repo.DeepCopy(data)
-	// TODO
+	data.Status = req.GetStatus()
 	err = {{.FirstChar}}.{{ .LowerName }}Repo.UpdateOneCacheWithZero(ctx, data, oldData)
 	if err != nil {
 		return nil, pb.ErrorReasonDataSQLError(pb.WithError(err))

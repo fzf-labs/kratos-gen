@@ -150,6 +150,8 @@ func (l *Service) Service(pbFiles []string) { //nolint:funlen,gocyclo
 						serviceMethod = tpl.ServiceMethodCreate
 					case "Update" + s.UpperName:
 						serviceMethod = tpl.ServiceMethodUpdate
+					case "Update" + s.UpperName + "Status":
+						serviceMethod = tpl.ServiceMethodUpdateStatus
 					case "Delete" + s.UpperName:
 						serviceMethod = tpl.ServiceMethodDelete
 					case "Get" + s.UpperName + "Info":
