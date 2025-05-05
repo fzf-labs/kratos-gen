@@ -33,30 +33,32 @@ func NewService(inPutPbPath, outPutServicePath string) *Service {
 }
 
 type ServiceNewTplParam struct {
-	GoPackage        string
-	UpperName        string
-	LowerName        string
-	UpperServiceName string
-	FirstChar        string
-	GoogleEmpty      bool
-	UseIO            bool
-	UseContext       bool
+	GoPackage        string // 包名
+	UpperName        string // 服务名
+	LowerName        string // 服务名小写
+	UpperServiceName string // 服务名大写
+	LowerServiceName string // 服务名小写
+	FirstChar        string // 服务名首字母
+	GoogleEmpty      bool   // 是否使用google.protobuf.Empty
+	UseIO            bool   // 是否使用io.Reader
+	UseContext       bool   // 是否使用context.Context
 }
 
 type ServiceMethodTplParam struct {
-	GoPackage        string
-	UpperName        string
-	LowerName        string
-	UpperServiceName string
-	FirstChar        string
-	GoogleEmpty      bool
-	UseIO            bool
-	UseContext       bool
-	Name             string
-	Request          string
-	Reply            string
-	Type             uint8
-	Comment          string
+	GoPackage        string // 包名
+	UpperName        string // 服务名
+	LowerName        string // 服务名小写
+	UpperServiceName string // 服务名大写
+	LowerServiceName string // 服务名小写
+	FirstChar        string // 服务名首字母
+	GoogleEmpty      bool   // 是否使用google.protobuf.Empty
+	UseIO            bool   // 是否使用io.Reader
+	UseContext       bool   // 是否使用context.Context
+	Name             string // 方法名
+	Request          string // 请求参数
+	Reply            string // 响应参数
+	Type             uint8  // 方法类型
+	Comment          string // 方法注释
 }
 
 type ServiceWireTplParam struct {
@@ -100,9 +102,10 @@ func (l *Service) Service(pbFiles []string) { //nolint:funlen,gocyclo
 					// 创建
 					service, err := utils.TemplateExecute(tpl.ServiceNew, &ServiceNewTplParam{
 						GoPackage:        s.GoPackage,
-						UpperName:        upperServiceName,
-						LowerName:        lowerServiceName,
-						UpperServiceName: s.UpperName,
+						UpperName:        s.UpperName,
+						LowerName:        s.LowerName,
+						UpperServiceName: upperServiceName,
+						LowerServiceName: lowerServiceName,
 						FirstChar:        firstChar,
 						GoogleEmpty:      s.GoogleEmpty,
 						UseIO:            s.UseIO,
@@ -125,11 +128,12 @@ func (l *Service) Service(pbFiles []string) { //nolint:funlen,gocyclo
 						log.Printf("service method already exists: %s\n", toMethod)
 						continue
 					}
-					method, err2 := utils.TemplateExecute(tpl.ServiceMethod, &ServiceMethodTplParam{
+					serviceMethodTplParam := &ServiceMethodTplParam{
 						GoPackage:        s.GoPackage,
-						UpperName:        upperServiceName,
-						LowerName:        lowerServiceName,
-						UpperServiceName: s.UpperName,
+						UpperName:        s.UpperName,
+						LowerName:        s.LowerName,
+						UpperServiceName: upperServiceName,
+						LowerServiceName: lowerServiceName,
 						FirstChar:        firstChar,
 						GoogleEmpty:      s.GoogleEmpty,
 						UseIO:            s.UseIO,
@@ -139,13 +143,29 @@ func (l *Service) Service(pbFiles []string) { //nolint:funlen,gocyclo
 						Reply:            v.Reply,
 						Type:             v.Type,
 						Comment:          v.Comment,
-					})
-					if err2 != nil {
-						log.Fatal(err2)
+					}
+					var serviceMethod string
+					switch v.Name {
+					case "Create" + s.UpperName:
+						serviceMethod = tpl.ServiceMethodCreate
+					case "Update" + s.UpperName:
+						serviceMethod = tpl.ServiceMethodUpdate
+					case "Delete" + s.UpperName:
+						serviceMethod = tpl.ServiceMethodDelete
+					case "Get" + s.UpperName + "Info":
+						serviceMethod = tpl.ServiceMethodInfo
+					case "Get" + s.UpperName + "List":
+						serviceMethod = tpl.ServiceMethodList
+					default:
+						serviceMethod = tpl.ServiceMethod
+					}
+					method, err := utils.TemplateExecute(serviceMethod, serviceMethodTplParam)
+					if err != nil {
+						log.Fatal(err)
 						return
 					}
-					if err3 := utils.Output(toMethod, method); err3 != nil {
-						log.Fatal(err3)
+					if err := utils.Output(toMethod, method); err != nil {
+						log.Fatal(err)
 						return
 					}
 					log.Printf("service method generated successfully: %s\n", toMethod)

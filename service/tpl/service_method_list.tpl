@@ -1,0 +1,50 @@
+{{- /* delete empty line */ -}}
+package service
+
+import (
+	{{- if .UseContext }}
+	"context"
+	{{- end }}
+	{{- if .UseIO }}
+	"io"
+	{{- end }}
+
+	pb "{{ .GoPackage }}"
+	{{- if .GoogleEmpty }}
+	"google.golang.org/protobuf/types/known/emptypb"
+	{{- end }}
+)
+{{- $s1 := "google.protobuf.Empty" }}
+
+// {{ .Name }} {{ .Comment }}
+func ({{.FirstChar}} *{{ .UpperServiceName }}Service) {{ .Name }}(ctx context.Context, req *pb.{{ .Request }}) (*pb.{{ .Reply }}, error) {
+	resp := &pb.{{ .Reply }}{
+		Total: 0,
+		List:  []*pb.{{ .UpperName }}Info{},
+	}
+	param := &condition.Req{
+		Page:     req.GetPage(),
+		PageSize: req.GetPageSize(),
+		Query:    []*condition.QueryParam{},
+		Order: []*condition.OrderParam{
+			{
+				Field: "createdAt",
+				Order: condition.DESC,
+			},
+		},
+	}
+	list, p, err := {{.FirstChar}}.{{ .LowerName }}Repo.FindMultiCacheByCondition(ctx, param)
+	if err != nil {
+		return nil, pb.ErrorReasonDataSQLError(pb.WithError(err))
+	}
+	resp.Total = int32(p.Total)
+	if len(list) > 0 {
+		for _, v := range list {
+			resp.List = append(resp.List, &pb.{{ .UpperName }}Info{
+				Id: v.ID,
+				// TODO
+			})
+		}
+	}
+	return resp,nil
+}

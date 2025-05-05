@@ -15,16 +15,19 @@ import (
 	{{- end }}
 )
 
-func New{{ .UpperName }}Service(
+func New{{ .UpperServiceName }}Service(
 	logger log.Logger,
-) *{{ .UpperName }}Service {
+	{{ .LowerName }}Repo *data.{{ .UpperName }}Repo,
+) *{{ .UpperServiceName }}Service {
 	l := log.NewHelper(log.With(logger, "module", "service/{{ .LowerName }}"))
-	return &{{ .UpperName }}Service{
+	return &{{ .UpperServiceName }}Service{
 		log:         l,
+		{{ .LowerName }}Repo: {{ .LowerName }}Repo,
 	}
 }
 
-type {{ .UpperName }}Service struct {
-	pb.Unimplemented{{ .UpperServiceName }}Server
+type {{ .UpperServiceName }}Service struct {
+	pb.Unimplemented{{ .UpperName }}Server
 	log *log.Helper
+	{{ .LowerName }}Repo *data.{{ .UpperName }}Repo
 }
