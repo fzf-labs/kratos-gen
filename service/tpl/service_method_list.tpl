@@ -28,7 +28,7 @@ func ({{.FirstChar}} *{{ .UpperServiceName }}Service) {{ .Name }}(ctx context.Co
 		Query:    []*condition.QueryParam{},
 		Order: []*condition.OrderParam{
 			{
-				Field: "createdAt",
+				Field: "created_at",
 				Order: condition.DESC,
 			},
 		},
