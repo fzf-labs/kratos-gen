@@ -19,7 +19,7 @@ import (
 // {{ .Name }} {{ .Comment }}
 func ({{.FirstChar}} *{{ .UpperServiceName }}Service) {{ .Name }}(ctx context.Context, req *pb.{{ .Request }}) (*pb.{{ .Reply }}, error) {
 	resp := &pb.{{ .Reply }}{}
-	err := {{.FirstChar}}.{{ .LowerName }}Repo.DeleteMultiCacheByIDS(ctx, req.GetIds())
+	err := {{.FirstChar}}.{{ .LowerName }}Repo.DeleteOneCacheByID(ctx, req.GetId())
 	if err != nil {
 		return nil, pb.ErrorReasonDataSQLError(pb.WithError(err))
 	}
