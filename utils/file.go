@@ -143,6 +143,9 @@ func GetDirUpperName(dir string) string {
 	str := ""
 	splitList := strings.Split(filepath.ToSlash(dir), "/")
 	for _, v := range splitList {
+		if v == "" {
+			continue
+		}
 		str += GetUpperName(v)
 	}
 	return str
@@ -153,6 +156,9 @@ func GetDirSnakeName(dir string) string {
 	list := make([]string, 0)
 	splitList := strings.Split(filepath.ToSlash(dir), "/")
 	for _, v := range splitList {
+		if v == "" || v == "." || v == ".." {
+			continue
+		}
 		list = append(list, strings.ToLower(GetUpperName(v)))
 	}
 	return strings.Join(list, "_")

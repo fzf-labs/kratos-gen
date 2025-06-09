@@ -21,6 +21,21 @@ const (
 	returnsStreamsType uint8 = 4
 )
 
+// Field 表示消息中的字段
+type Field struct {
+	Name          string // 字段名称
+	Type          string // 字段类型
+	Comment       string // 字段注释 (来自字段上方的注释)
+	InlineComment string // 字段行内注释 (来自字段后面的注释)
+	Repeated      bool   // 是否是重复字段
+}
+
+// Message 表示 proto 文件中的消息定义
+type Message struct {
+	Name   string   // 消息名称
+	Fields []*Field // 消息字段
+}
+
 type Proto struct {
 	GoPackage   string
 	UpperName   string
@@ -30,14 +45,17 @@ type Proto struct {
 	UseIO       bool
 	UseContext  bool
 	Methods     []*Method
+	Messages    []*Message // 添加消息定义列表
 }
 
 type Method struct {
-	Name    string
-	Request string
-	Reply   string
-	Type    uint8
-	Comment string
+	Name          string
+	Request       string
+	Reply         string
+	Type          uint8
+	Comment       string
+	RequestFields []*Field // 添加请求字段列表
+	ReplyFields   []*Field // 添加响应字段列表
 }
 
 func Translate(path string) []*Proto {
@@ -55,6 +73,39 @@ func Translate(path string) []*Proto {
 		log.Println(err)
 		return nil
 	}
+
+	// 先解析所有消息定义
+	messages := make(map[string]*Message)
+	proto.Walk(definition,
+		proto.WithMessage(func(m *proto.Message) {
+			message := &Message{
+				Name:   m.Name,
+				Fields: make([]*Field, 0),
+			}
+
+			for _, e := range m.Elements {
+				if f, ok := e.(*proto.NormalField); ok {
+					field := &Field{
+						Name:     f.Name,
+						Type:     f.Type,
+						Repeated: f.Repeated,
+					}
+					// 获取字段上方的注释
+					if f.Comment != nil {
+						field.Comment = strings.TrimSpace(f.Comment.Message())
+					}
+					// 获取字段后面的行内注释
+					if f.InlineComment != nil {
+						field.InlineComment = strings.TrimSpace(f.InlineComment.Message())
+					}
+					message.Fields = append(message.Fields, field)
+				}
+			}
+
+			messages[m.Name] = message
+		}),
+	)
+
 	proto.Walk(definition,
 		proto.WithOption(func(o *proto.Option) {
 			if o.Name == "go_package" {
@@ -67,7 +118,14 @@ func Translate(path string) []*Proto {
 				UpperName: GetUpperName(s.Name),
 				LowerName: GetLowerName(s.Name),
 				FirstChar: strings.ToLower(s.Name[0:1]),
+				Messages:  make([]*Message, 0),
 			}
+
+			// 添加消息定义到 Proto 结构体
+			for _, msg := range messages {
+				cs.Messages = append(cs.Messages, msg)
+			}
+
 			for _, e := range s.Elements {
 				r, ok := e.(*proto.RPC)
 				if !ok {
@@ -77,13 +135,27 @@ func Translate(path string) []*Proto {
 					log.Fatalf("rpc %s comment is nil", r.Name)
 					return
 				}
+
+				requestType := GetParametersName(r.RequestType)
+				replyType := GetParametersName(r.ReturnsType)
 				method := &Method{
 					Name:    GetUpperName(r.Name),
-					Request: GetParametersName(r.RequestType),
-					Reply:   GetParametersName(r.ReturnsType),
+					Request: requestType,
+					Reply:   replyType,
 					Type:    GetMethodType(r.StreamsRequest, r.StreamsReturns),
 					Comment: strings.TrimSpace(r.Comment.Message()),
 				}
+
+				// 添加请求字段
+				if msg, ok := messages[r.RequestType]; ok {
+					method.RequestFields = msg.Fields
+				}
+
+				// 添加响应字段
+				if msg, ok := messages[r.ReturnsType]; ok {
+					method.ReplyFields = msg.Fields
+				}
+
 				if (method.Type == unaryType && (method.Request == empty || method.Reply == empty)) ||
 					(method.Type == returnsStreamsType && method.Request == empty) {
 					cs.GoogleEmpty = true
@@ -100,6 +172,51 @@ func Translate(path string) []*Proto {
 		}),
 	)
 	return res
+}
+
+// GetRequestFields 获取指定方法的请求字段
+func GetRequestFields(protoPath string, serviceName string, methodName string) []*Field {
+	protos := Translate(protoPath)
+	for _, p := range protos {
+		if p.UpperName == serviceName || p.LowerName == serviceName {
+			for _, m := range p.Methods {
+				if m.Name == methodName {
+					return m.RequestFields
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// GetReplyFields 获取指定方法的响应字段
+func GetReplyFields(protoPath string, serviceName string, methodName string) []*Field {
+	protos := Translate(protoPath)
+	for _, p := range protos {
+		if p.UpperName == serviceName || p.LowerName == serviceName {
+			for _, m := range p.Methods {
+				if m.Name == methodName {
+					return m.ReplyFields
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// GetMethodFields 获取指定方法的请求和响应字段
+func GetMethodFields(protoPath string, serviceName string, methodName string) (requestFields []*Field, replyFields []*Field) {
+	protos := Translate(protoPath)
+	for _, p := range protos {
+		if p.UpperName == serviceName || p.LowerName == serviceName {
+			for _, m := range p.Methods {
+				if m.Name == methodName {
+					return m.RequestFields, m.ReplyFields
+				}
+			}
+		}
+	}
+	return nil, nil
 }
 
 // GetMethodType 获取方法类型
