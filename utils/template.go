@@ -3,12 +3,62 @@ package utils
 import (
 	"bytes"
 	"html/template"
+	"strings"
 )
+
+// toUpperCamelCase converts a string to UpperCamelCase
+func toUpperCamelCase(s string) string {
+	parts := strings.Split(s, "_")
+	for i, p := range parts {
+		if len(p) > 0 {
+			parts[i] = strings.ToUpper(p[0:1]) + strings.ToLower(p[1:])
+		}
+	}
+	return strings.Join(parts, "")
+}
+
+// toLowerCamelCase converts a string to lowerCamelCase
+func toLowerCamelCase(s string) string {
+	upperCamel := toUpperCamelCase(s)
+	if len(upperCamel) > 0 {
+		return strings.ToLower(upperCamel[0:1]) + upperCamel[1:]
+	}
+	return ""
+}
+
+// toSnakeCase converts a string to snake_case
+func toSnakeCase(s string) string {
+	// 先处理驼峰命名法，在大写字母前添加下划线
+	var result string
+	for i, c := range s {
+		if i > 0 && c >= 'A' && c <= 'Z' {
+			result += "_" + string(c)
+		} else {
+			result += string(c)
+		}
+	}
+	return strings.ToLower(result)
+}
 
 // TemplateExecute 执行模板
 func TemplateExecute(t string, data any) ([]byte, error) {
 	buf := new(bytes.Buffer)
-	tmpl, err := template.New("").Parse(t)
+	funcMap := template.FuncMap{
+		"ToCamel":      toUpperCamelCase,
+		"ToLowerCamel": toLowerCamelCase,
+		"ToSnake":      toSnakeCase,
+		// 字符串处理工具函数
+		"HasPrefix": strings.HasPrefix,
+		"HasSuffix": strings.HasSuffix,
+		"Contains":  strings.Contains,
+		"Replace":   strings.Replace,
+		"Join":      strings.Join,
+		"Split":     strings.Split,
+		"ToLower":   strings.ToLower,
+		"ToUpper":   strings.ToUpper,
+		"TrimSpace": strings.TrimSpace,
+	}
+	tmpl, err := template.New("").Funcs(funcMap).Parse(t)
 	if err != nil {
 		return nil, err
 	}

@@ -45,22 +45,21 @@ type ServiceNewTplParam struct {
 }
 
 type ServiceMethodTplParam struct {
-	GoPackage        string         // 包名
-	UpperName        string         // 服务名
-	LowerName        string         // 服务名小写
-	UpperServiceName string         // 服务名大写
-	LowerServiceName string         // 服务名小写
-	FirstChar        string         // 服务名首字母
-	GoogleEmpty      bool           // 是否使用google.protobuf.Empty
-	UseIO            bool           // 是否使用io.Reader
-	UseContext       bool           // 是否使用context.Context
-	Name             string         // 方法名
-	Request          string         // 请求参数
-	Reply            string         // 响应参数
-	Type             uint8          // 方法类型
-	Comment          string         // 方法注释
-	RequestFields    []*proto.Field // 请求字段
-	ReplyFields      []*proto.Field // 响应字段
+	GoPackage        string           // 包名
+	UpperName        string           // 服务名
+	LowerName        string           // 服务名小写
+	UpperServiceName string           // 服务名大写
+	LowerServiceName string           // 服务名小写
+	FirstChar        string           // 服务名首字母
+	GoogleEmpty      bool             // 是否使用google.protobuf.Empty
+	UseIO            bool             // 是否使用io.Reader
+	UseContext       bool             // 是否使用context.Context
+	Name             string           // 方法名
+	Request          string           // 请求参数
+	Reply            string           // 响应参数
+	Type             uint8            // 方法类型
+	Comment          string           // 方法注释
+	Messages         []*proto.Message // proto文件中的消息定义
 }
 
 type ServiceWireTplParam struct {
@@ -145,6 +144,7 @@ func (l *Service) Service(pbFiles []string) { //nolint:funlen,gocyclo
 						Reply:            v.Reply,
 						Type:             v.Type,
 						Comment:          v.Comment,
+						Messages:         s.Messages,
 					}
 					var serviceMethod string
 					switch v.Name {

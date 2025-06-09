@@ -107,6 +107,20 @@ service AdminDemo {
       }
     };
   }
+  //系统-用户-列表数据查询
+  rpc GetAdminDemoListByCondition(GetAdminDemoListByConditionReq) returns (GetAdminDemoListByConditionReply) {
+    option (google.api.http) = {get: "/api/gorm_gen/v1/admin_demo/list/condition"};
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
+      parameters: {
+        headers: {
+          name: "Authorization"
+          description: "Bearer Token"
+          type: STRING
+          required: true
+        }
+      }
+    };
+  }
 }
 //系统-用户信息
 message AdminDemoInfo {
@@ -210,3 +224,14 @@ message GetAdminDemoListReply {
   repeated AdminDemoInfo list = 2; // 列表数据
 }
 
+//请求-系统-用户-列表数据查询
+message GetAdminDemoListByConditionReq {
+  int32 page = 1; //页码
+  int32 pageSize = 2; //页数
+}
+
+//响应-系统-用户-列表数据查询
+message GetAdminDemoListByConditionReply {
+  int32 total = 1; //总数
+  repeated AdminDemoInfo list = 2; // 列表数据
+}

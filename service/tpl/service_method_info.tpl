@@ -15,6 +15,14 @@ import (
 	{{- end }}
 )
 {{- $s1 := "google.protobuf.Empty" }}
+{{- $upperName := .UpperName }}
+{{- $infoName := printf "%sInfo" $upperName }}
+{{- $infoFields := slice .Messages 0 0 }}
+{{- range $index, $message := .Messages }}
+{{- if eq $message.Name $infoName }}
+{{- $infoFields = $message.Fields }}
+{{- end }}
+{{- end }}
 
 // {{ .Name }} {{ .Comment }}
 func ({{.FirstChar}} *{{ .UpperServiceName }}Service) {{ .Name }}(ctx context.Context, req *pb.{{ .Request }}) (*pb.{{ .Reply }}, error) {
@@ -25,7 +33,11 @@ func ({{.FirstChar}} *{{ .UpperServiceName }}Service) {{ .Name }}(ctx context.Co
 	}
 	resp.Info = &pb.{{ .UpperName }}Info{
 		Id: data.ID,
-		// TODO
+		{{- range $field := $infoFields }}
+		{{- if ne $field.Name "id" }}
+		{{ $field.Name | ToCamel }}: data.{{ $field.Name | ToCamel }},
+		{{- end }}
+		{{- end }}
 	}
 	return resp,nil
 }

@@ -49,13 +49,11 @@ type Proto struct {
 }
 
 type Method struct {
-	Name          string
-	Request       string
-	Reply         string
-	Type          uint8
-	Comment       string
-	RequestFields []*Field // 添加请求字段列表
-	ReplyFields   []*Field // 添加响应字段列表
+	Name    string
+	Request string
+	Reply   string
+	Type    uint8
+	Comment string
 }
 
 func Translate(path string) []*Proto {
@@ -146,16 +144,6 @@ func Translate(path string) []*Proto {
 					Comment: strings.TrimSpace(r.Comment.Message()),
 				}
 
-				// 添加请求字段
-				if msg, ok := messages[r.RequestType]; ok {
-					method.RequestFields = msg.Fields
-				}
-
-				// 添加响应字段
-				if msg, ok := messages[r.ReturnsType]; ok {
-					method.ReplyFields = msg.Fields
-				}
-
 				if (method.Type == unaryType && (method.Request == empty || method.Reply == empty)) ||
 					(method.Type == returnsStreamsType && method.Request == empty) {
 					cs.GoogleEmpty = true
@@ -172,51 +160,6 @@ func Translate(path string) []*Proto {
 		}),
 	)
 	return res
-}
-
-// GetRequestFields 获取指定方法的请求字段
-func GetRequestFields(protoPath string, serviceName string, methodName string) []*Field {
-	protos := Translate(protoPath)
-	for _, p := range protos {
-		if p.UpperName == serviceName || p.LowerName == serviceName {
-			for _, m := range p.Methods {
-				if m.Name == methodName {
-					return m.RequestFields
-				}
-			}
-		}
-	}
-	return nil
-}
-
-// GetReplyFields 获取指定方法的响应字段
-func GetReplyFields(protoPath string, serviceName string, methodName string) []*Field {
-	protos := Translate(protoPath)
-	for _, p := range protos {
-		if p.UpperName == serviceName || p.LowerName == serviceName {
-			for _, m := range p.Methods {
-				if m.Name == methodName {
-					return m.ReplyFields
-				}
-			}
-		}
-	}
-	return nil
-}
-
-// GetMethodFields 获取指定方法的请求和响应字段
-func GetMethodFields(protoPath string, serviceName string, methodName string) (requestFields []*Field, replyFields []*Field) {
-	protos := Translate(protoPath)
-	for _, p := range protos {
-		if p.UpperName == serviceName || p.LowerName == serviceName {
-			for _, m := range p.Methods {
-				if m.Name == methodName {
-					return m.RequestFields, m.ReplyFields
-				}
-			}
-		}
-	}
-	return nil, nil
 }
 
 // GetMethodType 获取方法类型
