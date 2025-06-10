@@ -37,7 +37,7 @@ func ({{.FirstChar}} *{{ .UpperServiceName }}Service) {{ .Name }}(ctx context.Co
 	{{- if $requestFields }}
 	{{- range $requestFields }}
 	{{- if and (ne .Name "id") (ne .Name "ID") }}
-	data.{{ .Name | ToCamel }} = req.Get{{ .Name | ToCamel }}()
+	data.{{ .Name | UCFirst }} = req.Get{{ .Name | UCFirst }}()
 	{{- end }}
 	{{- end }}
 	{{- else }}

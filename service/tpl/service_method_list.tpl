@@ -52,7 +52,7 @@ func ({{.FirstChar}} *{{ .UpperServiceName }}Service) {{ .Name }}(ctx context.Co
 				Id: v.ID,
 				{{- range $field := $infoFields }}
 				{{- if ne $field.Name "id" }}
-				{{ $field.Name | ToCamel }}: v.{{ $field.Name | ToCamel }},
+				{{ $field.Name | UCFirst }}: v.{{ $field.Name | UCFirst }},
 				{{- end }}
 				{{- end }}
 			})

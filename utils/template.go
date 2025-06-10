@@ -40,6 +40,22 @@ func toSnakeCase(s string) string {
 	return strings.ToLower(result)
 }
 
+// 首字母大写
+func UCFirst(s string) string {
+	if len(s) > 0 {
+		return strings.ToUpper(s[0:1]) + s[1:]
+	}
+	return ""
+}
+
+// 首字母小写
+func LCFirst(s string) string {
+	if len(s) > 0 {
+		return strings.ToLower(s[0:1]) + s[1:]
+	}
+	return ""
+}
+
 // TemplateExecute 执行模板
 func TemplateExecute(t string, data any) ([]byte, error) {
 	buf := new(bytes.Buffer)
@@ -47,16 +63,17 @@ func TemplateExecute(t string, data any) ([]byte, error) {
 		"ToCamel":      toUpperCamelCase,
 		"ToLowerCamel": toLowerCamelCase,
 		"ToSnake":      toSnakeCase,
-		// 字符串处理工具函数
-		"HasPrefix": strings.HasPrefix,
-		"HasSuffix": strings.HasSuffix,
-		"Contains":  strings.Contains,
-		"Replace":   strings.Replace,
-		"Join":      strings.Join,
-		"Split":     strings.Split,
-		"ToLower":   strings.ToLower,
-		"ToUpper":   strings.ToUpper,
-		"TrimSpace": strings.TrimSpace,
+		"UCFirst":      UCFirst,
+		"LCFirst":      LCFirst,
+		"HasPrefix":    strings.HasPrefix,
+		"HasSuffix":    strings.HasSuffix,
+		"Contains":     strings.Contains,
+		"Replace":      strings.Replace,
+		"Join":         strings.Join,
+		"Split":        strings.Split,
+		"ToLower":      strings.ToLower,
+		"ToUpper":      strings.ToUpper,
+		"TrimSpace":    strings.TrimSpace,
 	}
 	tmpl, err := template.New("").Funcs(funcMap).Parse(t)
 	if err != nil {
