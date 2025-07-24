@@ -65,6 +65,13 @@ func PBToDB(s string) string {
 	return ""
 }
 
+func PBTime(s string) string {
+	if s == "CreatedAt" || s == "UpdatedAt" {
+		return s + ".Format(time.RFC3339)"
+	}
+	return s
+}
+
 // TemplateExecute 执行模板
 func TemplateExecute(t string, data any) ([]byte, error) {
 	buf := new(bytes.Buffer)
@@ -84,6 +91,7 @@ func TemplateExecute(t string, data any) ([]byte, error) {
 		"ToUpper":      strings.ToUpper,
 		"TrimSpace":    strings.TrimSpace,
 		"PBToDB":       PBToDB,
+		"PBTime":       PBTime,
 	}
 	tmpl, err := template.New("").Funcs(funcMap).Parse(t)
 	if err != nil {
