@@ -30,7 +30,7 @@ func ({{.FirstChar}} *{{ .UpperServiceName }}Service) {{ .Name }}(ctx context.Co
 	{{- if $requestFields }}
 	{{- range $requestFields }}
 	{{- if and (ne .Name "id") (ne .Name "ID") }}
-	data.{{ .Name | UCFirst }} = req.Get{{ .Name | UCFirst }}()
+	data.{{ .Name | PBToDB }} = req.Get{{ .Name | UCFirst }}()
 	{{- end }}
 	{{- end }}
 	{{- else }}

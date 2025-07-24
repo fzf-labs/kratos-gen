@@ -35,7 +35,7 @@ func ({{.FirstChar}} *{{ .UpperServiceName }}Service) {{ .Name }}(ctx context.Co
 		Id: data.ID,
 		{{- range $field := $infoFields }}
 		{{- if ne $field.Name "id" }}
-		{{ $field.Name | UCFirst }}: data.{{ $field.Name | UCFirst }},
+		{{ $field.Name | UCFirst }}: data.{{ $field.Name | PBToDB }},
 		{{- end }}
 		{{- end }}
 	}

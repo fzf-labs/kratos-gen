@@ -56,6 +56,15 @@ func LCFirst(s string) string {
 	return ""
 }
 
+func PBToDB(s string) string {
+	if len(s) > 0 {
+		s = strings.ReplaceAll(s, "Id", "ID") // 将Id替换为ID
+		s = strings.ToUpper(s[0:1]) + s[1:]   // 将首字母大写
+		return s
+	}
+	return ""
+}
+
 // TemplateExecute 执行模板
 func TemplateExecute(t string, data any) ([]byte, error) {
 	buf := new(bytes.Buffer)
@@ -74,6 +83,7 @@ func TemplateExecute(t string, data any) ([]byte, error) {
 		"ToLower":      strings.ToLower,
 		"ToUpper":      strings.ToUpper,
 		"TrimSpace":    strings.TrimSpace,
+		"PBToDB":       PBToDB,
 	}
 	tmpl, err := template.New("").Funcs(funcMap).Parse(t)
 	if err != nil {
