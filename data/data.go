@@ -24,34 +24,53 @@ type Data struct {
 	dsn            string // 数据库连接
 	targetTables   string // 指定表
 	outPutDataPath string // data输出路径
+	partitionTable bool   // 是否处理分区表
 }
 
-func NewData(db, dsn, targetTables, outPutDataPath string) *Data {
+func NewData(db, dsn, targetTables, outPutDataPath string, partitionTable bool) *Data {
 	return &Data{
 		db:             db,
 		dsn:            dsn,
 		targetTables:   targetTables,
 		outPutDataPath: outPutDataPath,
+		partitionTable: partitionTable,
 	}
 }
 
 func (d *Data) Run() {
 	orm, err := utils.NewDB(d.db, d.dsn)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("NewDB err: %v", err)
+		return
 	}
 	dbName := orm.Migrator().CurrentDatabase()
 	tables, err := orm.Migrator().GetTables()
 	if err != nil {
 		log.Printf("get tables err: %v", err)
+		return
 	}
 	if d.targetTables != "" {
 		targetTables := strings.Split(d.targetTables, ",")
 		for _, table := range targetTables {
 			if !slices.Contains(tables, table) {
 				log.Printf("table %s not found", table)
+				return
 			}
 		}
+		tables = targetTables
+	}
+	if d.partitionTable {
+		// 查询分区表父级到子表的映射
+		partitionTableToChildTables, err := utils.GetPartitionTableToChildTables(orm)
+		if err != nil {
+			return
+		}
+		partitionChildTables := make([]string, 0)
+		for _, v := range partitionTableToChildTables {
+			partitionChildTables = append(partitionChildTables, v...)
+		}
+		// 去掉tables中的分区子表
+		tables = utils.SliRemove(tables, partitionChildTables)
 	}
 	if _, err := os.Stat(d.outPutDataPath); os.IsNotExist(err) {
 		log.Printf("Target directory: %s does not exsit\n", d.outPutDataPath)
