@@ -130,8 +130,17 @@ func (d *Data) Run() {
 					if selector.Sel != nil && selector.Sel.Name == "NewSet" {
 						wires := make([]string, 0)
 						for _, arg := range fn.Args {
+							// 判断arg 是否是 *dst.Ident
 							if ident, ok2 := arg.(*dst.Ident); ok2 {
-								wires = append(wires, ident.Name)
+								if ident.Name != "" {
+									wires = append(wires, ident.Name)
+								}
+							}
+							// 判断arg 是否是 *dst.SelectorExpr
+							if selector, ok2 := arg.(*dst.SelectorExpr); ok2 {
+								if selector.X.(*dst.Ident).Name != "" {
+									wires = append(wires, selector.X.(*dst.Ident).Name+"."+selector.Sel.Name)
+								}
 							}
 						}
 						for _, wire := range dataWires {
