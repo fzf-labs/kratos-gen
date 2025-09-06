@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"sort"
 	"strings"
 	"unicode"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/dave/dst/decorator"
 	"github.com/fzf-labs/kratos-gen/data/tpl"
 	"github.com/fzf-labs/kratos-gen/utils"
+	"github.com/samber/lo"
 	"gorm.io/gorm"
 )
 
@@ -112,6 +114,7 @@ func (d *Data) Run() {
 		}
 	}
 	if len(dataWires) > 0 {
+		sort.Strings(dataWires)
 		// 语法树解析
 		fileSet := token.NewFileSet()
 		// 这里取绝对路径，方便打印出来的语法树可以转跳到编辑器
@@ -143,11 +146,10 @@ func (d *Data) Run() {
 								}
 							}
 						}
-						for _, wire := range dataWires {
-							if !slices.Contains(wires, wire) {
-								wires = append(wires, wire)
-							}
-						}
+						//取差集
+						wires, _ = lo.Difference(wires, dataWires)
+						//追加dataWires
+						wires = append(wires, dataWires...)
 						args := make([]dst.Expr, 0)
 						for _, wire := range wires {
 							args = append(args, &dst.Ident{
